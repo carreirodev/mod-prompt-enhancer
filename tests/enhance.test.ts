@@ -21,6 +21,7 @@ import {
   PORTUGUESE,
   summarize,
 } from '../hooks/rewrite'
+import { parseSettings } from '../hooks/settings'
 
 const PLUGIN = 'prompt-enhancer'
 const USAGE = {
@@ -52,6 +53,8 @@ const REWRITE = [
 
 const ANSWER: ModelCompleteResult = { isAnswered: true, text: `\`\`\`\n${REWRITE}\n\`\`\``, usage: USAGE }
 
+const TYPED = { origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 120 } } as const
+
 const BAND = {
   plugin: PLUGIN,
   component: 'AbovePrompt',
@@ -71,6 +74,7 @@ type World = {
   submits: PromptSubmitInput[]
   requests: ModelCompleteInput[]
   toasts: string[]
+  stored: Record<string, unknown>
   clock: MockClock
 }
 
@@ -87,9 +91,16 @@ const world = (
     submits: [],
     requests: [],
     toasts: [],
+    stored: {},
     clock: mock.clock(on, { now: 1_000 }),
   }
   mock.env(on, {})
+  on('store.get', ($, e) => ({ value: seen.stored[e.key] }))
+  on('store.set', ($, e) => {
+    seen.stored[e.key] = e.value
+
+    return { value: undefined }
+  })
   on('prompt.read', () => ({ value: seen.box }))
   on('prompt.fill', ($, e) => {
     seen.fills.push(e)
@@ -342,6 +353,93 @@ describe('Send', () => {
   })
 })
 
+describe('Settings', () => {
+  test('/prompt-enhancer opens the row with the stored choice on terminal and desktop', async ($, on) => {
+    const seen = world(on, '', ANSWER)
+    seen.stored.settings = { model: 'opus', effort: 'high' }
+    const closed = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    expect(await closed.find({ type: 'Select', key: 'model' })).toBeUndefined()
+    await closed.unmount()
+
+    const answer = await $.command.run({ command: 'prompt-enhancer', args: '', ...TYPED })
+
+    expect(answer.text).toContain('modelo opus · esforço high')
+    for (const surface of ['terminal', 'desktop'] as const) {
+      const ui = await $.ui.mount({ ...BAND, surface })
+      const model = await ui.find({ type: 'Select', key: 'model' })
+      expect(model?.props.value).toBe('opus')
+      expect(model?.props.autoFocus).toBe(true)
+      expect((await ui.find({ type: 'Select', key: 'effort' }))?.props.value).toBe('high')
+      expect(await ui.find({ type: 'Button', key: 'enhance' })).toBeDefined()
+      await ui.unmount()
+    }
+  })
+
+  test('a pick in the row is saved and the next Enhance uses it', async ($, on) => {
+    const seen = world(on, 'add dark mode', ANSWER)
+    await $.command.run({ command: 'prompt-enhancer', args: '', ...TYPED })
+    const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    await ui.select({ key: 'model', value: 'haiku' })
+    await ui.select({ key: 'effort', value: 'low' })
+
+    expect(seen.stored.settings).toEqual({ model: 'haiku', effort: 'low' })
+    expect((await ui.find({ type: 'Select', key: 'model' }))?.props.value).toBe('haiku')
+
+    await ui.press({ key: 'enhance' })
+
+    expect(seen.requests[0]?.model).toBe('haiku')
+    expect(seen.requests[0]?.effort).toBe('low')
+    await ui.unmount()
+  })
+
+  test('Fechar closes the row and leaves Enhance and Send', async ($, on) => {
+    world(on, '', ANSWER)
+    await $.command.run({ command: 'prompt-enhancer', args: '', ...TYPED })
+    const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    await ui.press({ key: 'close' })
+
+    expect(await ui.find({ type: 'Select', key: 'model' })).toBeUndefined()
+    expect(await ui.find({ type: 'Button', key: 'enhance' })).toBeDefined()
+    await ui.unmount()
+  })
+
+  test('/prompt-enhancer with words saves them without opening the row', async ($, on) => {
+    const seen = world(on, '', ANSWER)
+    const answer = await $.command.run({ command: 'prompt-enhancer', args: 'opus high', ...TYPED })
+
+    expect(answer.text).toBe('agora usa modelo opus · esforço high.')
+    expect(seen.stored.settings).toEqual({ model: 'opus', effort: 'high' })
+
+    await $.command.run({ command: 'prompt-enhancer', args: ' LOW ', ...TYPED })
+
+    expect(seen.stored.settings).toEqual({ model: 'opus', effort: 'low' })
+    const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    expect(await ui.find({ type: 'Select', key: 'model' })).toBeUndefined()
+    await ui.unmount()
+  })
+
+  test('an unknown word changes nothing and lists the choices', async ($, on) => {
+    const seen = world(on, '', ANSWER)
+    seen.stored.settings = { model: 'opus', effort: 'high' }
+    const answer = await $.command.run({ command: 'prompt-enhancer', args: 'gpt low', ...TYPED })
+
+    expect(answer.text).toContain('gpt')
+    expect(answer.text).toContain('sonnet, opus, haiku')
+    expect(seen.stored.settings).toEqual({ model: 'opus', effort: 'high' })
+  })
+
+  test('Enhance falls back to sonnet and medium when the stored choice is invalid', async ($, on) => {
+    const seen = world(on, 'add dark mode', ANSWER)
+    seen.stored.settings = { model: 'gpt-4', effort: 'max' }
+    const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    await ui.press({ key: 'enhance' })
+
+    expect(seen.requests[0]?.model).toBe('sonnet')
+    expect(seen.requests[0]?.effort).toBe('medium')
+    await ui.unmount()
+  })
+})
+
 describe('helpers', () => {
   test('cleanReply drops a fence and a preamble but keeps the prompt', () => {
     expect(cleanReply(`\`\`\`text\n${REWRITE}\n\`\`\``)).toBe(REWRITE)
@@ -390,5 +488,11 @@ describe('helpers', () => {
 
     expect(chordFor(config, 'command:enhance')).toBe('alt+e')
     expect(chordFor({ bindings: 'nope' }, 'command:enhance')).toBe('')
+  })
+
+  test('parseSettings keeps the valid fields and defaults the rest', () => {
+    expect(parseSettings(undefined)).toEqual({ model: 'sonnet', effort: 'medium' })
+    expect(parseSettings('opus')).toEqual({ model: 'sonnet', effort: 'medium' })
+    expect(parseSettings({ model: 'haiku', effort: 'xhigh' })).toEqual({ model: 'haiku', effort: 'medium' })
   })
 })

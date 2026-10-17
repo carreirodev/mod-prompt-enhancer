@@ -1,23 +1,7 @@
 {
   "name": "prompt-enhancer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": { "name": "carreirodev" },
   "description": "Botões Enhance e Send acima do prompt: reescreve o rascunho no lugar com as skills certas, contexto do projeto, perguntas a decidir e o que é \"pronto\".",
-  "types": "./types/index.d.ts",
-  "userConfig": {
-    "model": {
-      "type": "string",
-      "title": "Modelo da reescrita",
-      "description": "Modelo que reescreve o rascunho quando você aperta Enhance",
-      "default": "sonnet",
-      "options": ["sonnet", "opus", "haiku"]
-    },
-    "effort": {
-      "type": "string",
-      "title": "Esforço da reescrita",
-      "description": "Quanto o modelo pensa antes de reescrever: low é mais rápido, high é mais caprichado",
-      "default": "medium",
-      "options": ["low", "medium", "high"]
-    }
-  }
+  "types": "./types/index.d.ts"
 }

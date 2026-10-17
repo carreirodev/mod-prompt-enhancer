@@ -1,20 +1,16 @@
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, ModelEffort, PluginOptions, Register } from 'claude-code'
+import type { EngineInterface, Register } from 'claude-code'
 
-import type { EnhanceRun } from '../types'
+import type { EnhanceRun, EnhanceSettings } from '../types'
 import { drawBand } from './band'
 import { clip, errorText, listSkills, oneLine, snapshotProject } from './context'
 import { readHotkey } from './hotkey'
 import { buildRequest, cleanReply, describeSummary, failureText, summarize } from './rewrite'
-
-type Settings = {
-  model: string
-  effort: ModelEffort
-}
+import { applyArgs, DEFAULT_SETTINGS, describeSettings, EFFORTS, MODELS, parseSettings } from './settings'
 
 const COMMAND = 'enhance'
+const STORE_KEY = 'settings'
 const TICK_MS = 80
-const EFFORTS: readonly ModelEffort[] = ['low', 'medium', 'high']
 // why: a plugin's submit does not expand pastes or images, so a draft holding one must go out by Enter.
 const PLACEHOLDER = /\[(?:Pasted text #\d+|Image #\d+|\.\.\.Truncated text #\d+|✦ Team setup guide #\d+)/
 const SLASH = /^\/([A-Za-z0-9:_-]+)(?:\s+([\s\S]*))?$/
@@ -31,13 +27,55 @@ const IDLE: EnhanceRun = {
 const run = atom({ plugin: 'prompt-enhancer', key: 'run' } as const, IDLE)
 const frame = atom({ plugin: 'prompt-enhancer', key: 'frame' } as const, 0)
 const hotkey = atom({ plugin: 'prompt-enhancer', key: 'hotkey' } as const, '')
+const settings = atom({ plugin: 'prompt-enhancer', key: 'settings' } as const, DEFAULT_SETTINGS)
+const isConfiguring = atom({ plugin: 'prompt-enhancer', key: 'isConfiguring' } as const, false)
 
 let inFlight: AbortController | undefined
 
-const settingsOf = (options: PluginOptions): Settings => ({
-  model: typeof options.model === 'string' && options.model !== '' ? options.model : 'sonnet',
-  effort: EFFORTS.find(level => level === options.effort) ?? 'medium',
-})
+// invariant: the store is the source of truth, read on every use, so a pick made in another session applies here too.
+async function loadSettings($: EngineInterface): Promise<EnhanceSettings> {
+  const loaded = parseSettings(await $.store.get(STORE_KEY))
+  await update($, settings, () => loaded)
+
+  return loaded
+}
+
+async function saveSettings($: EngineInterface, chosen: EnhanceSettings): Promise<void> {
+  await $.store.set(STORE_KEY, chosen)
+  await update($, settings, () => chosen)
+}
+
+async function choose($: EngineInterface, field: keyof EnhanceSettings, value: string): Promise<void> {
+  const current = await loadSettings($)
+  await saveSettings($, parseSettings({ ...current, [field]: value }))
+}
+
+async function closeSettings($: EngineInterface): Promise<void> {
+  await update($, isConfiguring, () => false)
+}
+
+async function configure($: EngineInterface, args: string): Promise<{ text: string }> {
+  const current = await loadSettings($)
+  if (args.trim() === '') {
+    await update($, isConfiguring, () => true)
+
+    return {
+      text: `${describeSettings(current)}. Escolha na faixa acima do prompt (ctrl+x tab) ou digite /prompt-enhancer <modelo> <esforço>.`,
+    }
+  }
+
+  const change = applyArgs(current, args)
+  if ('unknown' in change) {
+    return {
+      text: `Não reconheci: ${change.unknown.join(', ')}. Modelos: ${MODELS.join(', ')}. Esforço: ${EFFORTS.join(', ')}. Nada foi alterado.`,
+    }
+  }
+
+  await saveSettings($, change.settings)
+
+  // why: the engine prefixes a plugin command's output with the plugin's name, so the text starts mid-sentence.
+  return { text: `agora usa ${describeSettings(change.settings)}.` }
+}
 
 function detach($: EngineInterface, label: string, work: Promise<void>): void {
   work.catch((error: unknown) => {
@@ -51,7 +89,7 @@ async function finish($: EngineInterface, phase: 'done' | 'failed', note: string
   await update($, run, current => ({ ...current, phase, note, finishedAt }))
 }
 
-async function enhance($: EngineInterface, settings: Settings, args: string): Promise<void> {
+async function enhance($: EngineInterface, args: string): Promise<void> {
   if ((await read($, run)).phase === 'working') {
     $.ui.toast('Já estou melhorando o rascunho, só um instante')
 
@@ -84,13 +122,17 @@ async function enhance($: EngineInterface, settings: Settings, args: string): Pr
   })
 
   try {
-    const [skills, snapshot] = await Promise.all([listSkills($, COMMAND), snapshotProject($)])
+    const [skills, snapshot, chosen] = await Promise.all([
+      listSkills($, COMMAND),
+      snapshotProject($),
+      loadSettings($),
+    ])
     if (controller.signal.aborted) {
       return
     }
 
-    await update($, run, current => ({ ...current, note: `reescrevendo com ${settings.model}` }))
-    const request = buildRequest({ draft, skills, snapshot, ...settings })
+    await update($, run, current => ({ ...current, note: `reescrevendo com ${chosen.model}` }))
+    const request = buildRequest({ draft, skills, snapshot, ...chosen })
     const reply = await $.model.complete(request, { signal: controller.signal })
     if (controller.signal.aborted) {
       return
@@ -221,15 +263,19 @@ async function cancel($: EngineInterface): Promise<void> {
   $.ui.toast('Cancelado: o rascunho ficou como estava')
 }
 
-export const register: Register = (on, options) => {
-  const settings = settingsOf(options)
-
+export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     // why: the engine recognises a hook that answers its own command only when both name it as a literal.
     await $.command.register({
       name: 'enhance',
       description: 'Reescreve o rascunho da caixa de prompt com skills, contexto, perguntas e critério de pronto',
       argumentHint: '[rascunho]',
+      immediate: true,
+    })
+    await $.command.register({
+      name: 'prompt-enhancer',
+      description: 'Escolhe o modelo e o esforço que o Enhance usa para reescrever',
+      argumentHint: '[sonnet|opus|haiku] [low|medium|high]',
       immediate: true,
     })
 
@@ -251,10 +297,12 @@ export const register: Register = (on, options) => {
   })
 
   on('command.run', { command: 'enhance' }, ($, e) => {
-    detach($, 'Enhance', enhance($, settings, e.args))
+    detach($, 'Enhance', enhance($, e.args))
 
     return {}
   })
+
+  on('command.run', { command: 'prompt-enhancer' }, ($, e) => configure($, e.args))
 
   on('prompt.submit', async ($, e, next) => {
     const result = await next(e)
@@ -271,22 +319,27 @@ export const register: Register = (on, options) => {
       return next(e)
     }
 
-    const [current, tick, chord, now] = await Promise.all([
+    const [current, tick, chord, chosen, configuring, now] = await Promise.all([
       read($, run),
       read($, frame),
       read($, hotkey),
+      read($, settings),
+      read($, isConfiguring),
       $.clock.now(),
     ])
 
     return drawBand(
       $,
       e,
-      { run: current, frame: tick, hotkey: chord, now },
+      { run: current, frame: tick, hotkey: chord, settings: configuring ? chosen : undefined, now },
       {
-        enhance: () => detach($, 'Enhance', enhance($, settings, '')),
+        enhance: () => detach($, 'Enhance', enhance($, '')),
         send: () => detach($, 'Send', send($, e.props.isWorking)),
         undo: () => detach($, 'Desfazer', undo($)),
         cancel: () => detach($, 'Cancelar', cancel($)),
+        pickModel: value => detach($, 'Modelo', choose($, 'model', value)),
+        pickEffort: value => detach($, 'Esforço', choose($, 'effort', value)),
+        closeSettings: () => detach($, 'Fechar', closeSettings($)),
       },
     )
   })

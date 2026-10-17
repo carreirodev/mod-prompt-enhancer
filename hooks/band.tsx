@@ -1,11 +1,14 @@
 import type { EngineInterface, RenderInput } from 'claude-code'
 
-import type { EnhanceRun } from '../types'
+import type { EnhanceRun, EnhanceSettings } from '../types'
+import { EFFORTS, MODELS } from './settings'
 
 export type BandView = {
   run: EnhanceRun
   frame: number
   hotkey: string
+  // invariant: present only while /prompt-enhancer has the settings row open.
+  settings: EnhanceSettings | undefined
   now: number
 }
 
@@ -14,6 +17,9 @@ export type BandActions = {
   send: () => void
   undo: () => void
   cancel: () => void
+  pickModel: (value: string) => void
+  pickEffort: (value: string) => void
+  closeSettings: () => void
 }
 
 const SPINNER = ['·', '✢', '✳', '✶', '✻', '✽', '✻', '✶', '✳', '✢']
@@ -26,7 +32,10 @@ const ROOMY_COLUMNS = 72
 const seconds = (ms: number): string => (Math.max(0, ms) / 1000).toFixed(1).replace('.', ',')
 
 export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view: BandView, act: BandActions) {
-  const { Box, Button, Text } = $.ui.resolve(e)
+  const elements = $.ui.resolve(e)
+  const { Box, Button, Text } = elements
+  // why: mobile draws no picker, so there the row stays shut and the typed /prompt-enhancer form is the way.
+  const Select = 'Select' in elements ? elements.Select : undefined
   const width = Math.max(24, e.props.bodyColumns)
   const isRoomy = width >= ROOMY_COLUMNS
   const { phase, note, startedAt, finishedAt } = view.run
@@ -103,7 +112,7 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
       hint
     ) : null
 
-  return (
+  const actions = (
     <Box flexDirection="row" width={width} justifyContent="space-between">
       <Box flexDirection="row" flexShrink={1} gap={1}>
         {enhance}
@@ -119,6 +128,40 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
           {trailing}
         </Box>
       )}
+    </Box>
+  )
+
+  if (view.settings === undefined || Select === undefined) {
+    return actions
+  }
+
+  // why: drawn above Enhance so its autoFocus wins the ring, and the focus chord lands on the Model picker.
+  return (
+    <Box flexDirection="column" width={width}>
+      <Box flexDirection="row" width={width} gap={2}>
+        <Select
+          key="model"
+          label="Modelo"
+          options={MODELS.map(value => ({ value }))}
+          value={view.settings.model}
+          autoFocus
+          onSelect={act.pickModel}
+        />
+        <Select
+          key="effort"
+          label="Esforço"
+          options={EFFORTS.map(value => ({ value }))}
+          value={view.settings.effort}
+          onSelect={act.pickEffort}
+        />
+        <Button key="close" label="Fechar" plain dimColor onPress={act.closeSettings} />
+        {isRoomy && (
+          <Text dimColor wrap="truncate-end">
+            ctrl+x tab escolhe · Esc volta ao prompt
+          </Text>
+        )}
+      </Box>
+      {actions}
     </Box>
   )
 }

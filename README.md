@@ -21,6 +21,7 @@ Você revisa, ajusta e envia.
 | Voltar ao rascunho original | **↶ Desfazer**, que aparece depois de melhorar |
 | Parar uma reescrita | **Cancelar**, que aparece enquanto ela roda |
 | Melhorar um texto direto | `/enhance <texto>` |
+| Escolher modelo e esforço | `/prompt-enhancer` (veja [Configuração](#configuração)) |
 | Usar só o teclado na faixa | `ctrl+x tab` foca o Enhance, `Tab` anda entre os botões, `Esc` volta ao prompt |
 
 Enquanto o modelo trabalha, a faixa mostra o andamento. Se você editar o rascunho nesse meio-tempo, a sua versão vence e nada é trocado.
@@ -55,10 +56,17 @@ A reescrita sai na língua do rascunho, mesmo que o seu `language` do Claude Cod
 
 ## Configuração
 
-Em `/config`, nas linhas do `prompt-enhancer`:
+O mod tem o próprio comando, `/prompt-enhancer`, e não aparece no `/config`. São duas escolhas:
 
-- **Modelo da reescrita:** `sonnet` (padrão), `opus` ou `haiku`.
-- **Esforço da reescrita:** `low`, `medium` (padrão) ou `high`.
+- **Modelo da reescrita:** `sonnet` (padrão), `opus` ou `haiku`. O `opus` reescreve melhor, mas é mais lento e gasta mais; o `haiku` é o mais rápido.
+- **Esforço da reescrita:** `low`, `medium` (padrão) ou `high`. É quanto o modelo pensa antes de reescrever.
+
+Há dois jeitos de escolher:
+
+- `/prompt-enhancer` sozinho abre uma linha na faixa, acima do Enhance, com as duas listas. `ctrl+x tab` leva o foco à lista de modelo, as setas trocam o valor, Enter escolhe, `Tab` passa para o esforço e **Fechar** some com a linha. A resposta do comando também mostra o que está valendo.
+- `/prompt-enhancer opus high` salva direto, sem abrir a linha. Dá para passar só um dos dois (`/prompt-enhancer haiku`, `/prompt-enhancer low`).
+
+A escolha fica guardada num arquivo do próprio mod, na pasta de configuração do Claude Code, e vale em todas as sessões a partir do próximo Enhance. No app mobile a linha com as listas não aparece; use a forma digitada.
 
 ## Instalar em todas as sessões
 
@@ -71,6 +79,8 @@ claude plugin marketplace add carreirodev/mod-prompt-enhancer
 ```
 claude plugin install prompt-enhancer@prompt-enhancer
 ```
+
+Para receber uma versão nova, rode `claude plugin update prompt-enhancer@prompt-enhancer` e depois `/reload-plugins` numa sessão aberta.
 
 Para mexer no mod, adicione o marketplace pela pasta clonada em vez do GitHub (`claude plugin marketplace add C:\caminho\do\clone`). Assim o Claude Code lê o mod direto dessa pasta, e depois de editar basta rodar `/reload-plugins` numa sessão aberta.
 

@@ -8,12 +8,23 @@ export type EnhanceRun = {
   finishedAt: number
 }
 
+export type EnhanceModel = 'sonnet' | 'opus' | 'haiku'
+
+export type EnhanceEffort = 'low' | 'medium' | 'high'
+
+export type EnhanceSettings = {
+  model: EnhanceModel
+  effort: EnhanceEffort
+}
+
 declare module 'claude-code' {
   interface PluginState {
     'prompt-enhancer': {
       run: EnhanceRun
       frame: number
       hotkey: string
+      settings: EnhanceSettings
+      isConfiguring: boolean
     }
   }
 }
