@@ -48,3 +48,12 @@ Done when: on desktop the band's hint reads "/enhance melhora o rascunho" (the a
 - [x] `isNative` picks `/enhance` for the hint in `hooks/band.tsx`; README notes it
 - [x] Test for both surfaces (hotkey loaded through `session.start`), validate, tsc, tests
 - [x] Commit, push, `claude plugin update` (8095195)
+
+## 0.2.3 — the terminal hint shows the chord from the first draw
+
+Done when: a fresh terminal session draws "alt+e melhora o rascunho" from the band's first frame (the 0.2.2 report showed "/enhance": the chord lived in `$.state`, written at `session.start`, and the band could draw before it and not redraw); desktop keeps "/enhance"; tests, validate and tsc pass.
+
+- [x] Chord read once per load in `chordOf` (`hooks/register.tsx`), awaited by every draw; `hotkey` dropped from the state contract
+- [x] Test: the first draw, with no `session.start`, names the chord on the terminal and /enhance on desktop
+- [x] Real terminal: `claude --debug --plugin-dir <repo>` drew alt+e on its first frame, before `session.start` settled
+- [ ] Commit, push, `claude plugin update`

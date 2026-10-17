@@ -26,11 +26,25 @@ const IDLE: EnhanceRun = {
 
 const run = atom({ plugin: 'prompt-enhancer', key: 'run' } as const, IDLE)
 const frame = atom({ plugin: 'prompt-enhancer', key: 'frame' } as const, 0)
-const hotkey = atom({ plugin: 'prompt-enhancer', key: 'hotkey' } as const, '')
 const settings = atom({ plugin: 'prompt-enhancer', key: 'settings' } as const, DEFAULT_SETTINGS)
 const isConfiguring = atom({ plugin: 'prompt-enhancer', key: 'isConfiguring' } as const, false)
 
 let inFlight: AbortController | undefined
+let chordRead: Promise<string> | undefined
+
+// invariant: read once per load and awaited by every draw, so the band never shows /enhance in place of the chord.
+// why: a chord kept in $.state and written at session.start could miss the band's first draws and leave it on /enhance.
+function chordOf($: EngineInterface): Promise<string> {
+  chordRead ??= readHotkey($, COMMAND).catch((error: unknown) => {
+    $.ui.log(`prompt-enhancer: keybindings.json unreadable, hint falls back to /enhance: ${errorText(error)}`, {
+      to: 'debug',
+    })
+
+    return ''
+  })
+
+  return chordRead
+}
 
 // invariant: the store is the source of truth, read on every use, so a pick made in another session applies here too.
 async function loadSettings($: EngineInterface): Promise<EnhanceSettings> {
@@ -265,6 +279,7 @@ async function cancel($: EngineInterface): Promise<void> {
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    const chord = chordOf($)
     // why: the engine recognises a hook that answers its own command only when both name it as a literal.
     await $.command.register({
       name: 'enhance',
@@ -284,14 +299,7 @@ export const register: Register = on => {
       await update($, run, () => IDLE)
     }
 
-    try {
-      const chord = await readHotkey($, COMMAND)
-      await update($, hotkey, () => chord)
-    } catch (error) {
-      $.ui.log(`prompt-enhancer: keybindings.json unreadable, hint falls back to /enhance: ${errorText(error)}`, {
-        to: 'debug',
-      })
-    }
+    await chord
 
     return next(e)
   })
@@ -322,7 +330,7 @@ export const register: Register = on => {
     const [current, tick, chord, chosen, configuring, now] = await Promise.all([
       read($, run),
       read($, frame),
-      read($, hotkey),
+      chordOf($),
       read($, settings),
       read($, isConfiguring),
       $.clock.now(),

@@ -22,7 +22,6 @@ declare module 'claude-code' {
     'prompt-enhancer': {
       run: EnhanceRun
       frame: number
-      hotkey: string
       settings: EnhanceSettings
       isConfiguring: boolean
     }
