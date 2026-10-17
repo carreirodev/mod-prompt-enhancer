@@ -12,15 +12,7 @@ import type {
 import type { MockClock } from 'claude-code/testing'
 
 import { chordFor } from '../hooks/hotkey'
-import {
-  buildRequest,
-  cleanReply,
-  describeSummary,
-  draftLanguage,
-  ENGLISH,
-  PORTUGUESE,
-  summarize,
-} from '../hooks/rewrite'
+import { buildRequest, cleanReply, draftLanguage, ENGLISH, PORTUGUESE } from '../hooks/rewrite'
 import { parseSettings } from '../hooks/settings'
 
 const PLUGIN = 'prompt-enhancer'
@@ -38,14 +30,7 @@ const COMMANDS: CommandInfo[] = [
 ]
 
 const REWRITE = [
-  'Quero adicionar modo escuro ao app.',
-  '',
-  'Skills a usar:',
-  '- /simplify para revisar o código no fim',
-  '',
-  'Pergunte antes de começar:',
-  '- O tema deve seguir o sistema operacional?',
-  '- Precisa de um seletor manual?',
+  'Quero adicionar um modo escuro ao app.',
   '',
   'Pronto quando:',
   '- O app alterna entre claro e escuro.',
@@ -115,10 +100,6 @@ const world = (
   })
   on('command.list', () => ({ value: COMMANDS }))
   on('command.register', () => ({ value: { command: 'enhance' } }))
-  on('session.root', () => ({ value: '/work/app' }))
-  on('session.repo', () => ({ value: null }))
-  on('session.messages', () => ({ value: [] }))
-  on('fs.list', () => ({ value: [] }))
   on('fs.exists', () => ({ value: false }))
   on('model.complete', async ($, e) => {
     seen.requests.push(e)
@@ -206,10 +187,22 @@ describe('Enhance', () => {
     expect(seen.fills.map(fill => [fill.mode, fill.text])).toEqual([['replace', REWRITE]])
     expect(seen.submits).toHaveLength(0)
     expect(seen.requests[0]?.prompt).toContain('<draft>\nadd dark mode\n</draft>')
-    expect(seen.requests[0]?.prompt).toContain('/simplify (builtin)')
-    expect(seen.requests[0]?.prompt).not.toContain('/enhance (')
     expect(await ui.find({ text: /Prompt melhorado/ })).toBeDefined()
+    expect(await ui.find({ text: /pergunta|skill/ })).toBeUndefined()
     expect(await ui.find({ type: 'Button', key: 'undo' })).toBeDefined()
+    await ui.unmount()
+  })
+
+  test('the request carries only the draft, never the project, skills or conversation', async ($, on) => {
+    const seen = world(on, 'add dark mode', ANSWER)
+    const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    await ui.press({ key: 'enhance' })
+
+    const prompt = seen.requests[0]?.prompt ?? ''
+    expect(prompt.startsWith('<draft>\nadd dark mode\n</draft>\n\nRewrite the draft.')).toBe(true)
+    expect(prompt).not.toContain('<project>')
+    expect(prompt).not.toContain('<installed_skills>')
+    expect(prompt).not.toContain('/simplify')
     await ui.unmount()
   })
 
@@ -488,16 +481,6 @@ describe('helpers', () => {
     expect(cleanReply(REWRITE)).toBe(REWRITE)
   })
 
-  test('summarize counts named skills and questions', () => {
-    const skills = COMMANDS.map(command => ({ name: command.name, description: '', origin: command.source }))
-    const summary = summarize(REWRITE, skills)
-
-    expect(summary).toEqual({ skills: ['simplify'], questions: 2 })
-    expect(describeSummary(summary)).toBe('1 skill · 2 perguntas')
-    expect(summarize('- /code-review: check the diff', skills).skills).toEqual(['code-review'])
-    expect(summarize('- /code-review:deep finds more', skills).skills).toEqual([])
-  })
-
   test('draftLanguage tells English from Portuguese and stays out of the way otherwise', () => {
     expect(draftLanguage('add a short README section about the alt+e shortcut')).toBe(ENGLISH)
     expect(draftLanguage('make the band messages translatable')).toBe(ENGLISH)
@@ -507,15 +490,14 @@ describe('helpers', () => {
   })
 
   test('the request names the draft language and its labels', () => {
-    const snapshot = { root: '/work/app', text: 'root: /work/app' }
     const ask = (draft: string) => {
-      const blocks = buildRequest({ draft, skills: [], snapshot, model: 'sonnet', effort: 'medium' }).prompt
+      const blocks = buildRequest({ draft, model: 'sonnet', effort: 'medium' }).prompt
 
       return typeof blocks === 'string' ? blocks : blocks.map(block => block.text).join('\n')
     }
 
     expect(ask('add a dark mode toggle to the settings page')).toContain('Write every word of the rewrite in English.')
-    expect(ask('adicionar modo escuro na tela de configurações')).toContain('"Pergunte antes de começar:"')
+    expect(ask('adicionar modo escuro na tela de configurações')).toContain('"Pronto quando:"')
     expect(ask('dark mode')).toContain('in the language the draft is written in')
   })
 

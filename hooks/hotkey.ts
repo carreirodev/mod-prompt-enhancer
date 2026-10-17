@@ -1,6 +1,6 @@
 import type { EngineInterface } from 'claude-code'
 
-import { isRecord } from './context'
+import { isRecord } from './text'
 
 export const chordFor = (config: unknown, action: string): string => {
   if (!isRecord(config) || !Array.isArray(config.bindings)) {

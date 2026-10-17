@@ -2,15 +2,14 @@
 
 Mod do Claude Code que coloca dois botões logo acima da caixa de prompt, **✦ Enhance** e **➤ Send**.
 
-**Enhance** reescreve o seu rascunho no próprio lugar, sem enviar. A nova versão traz:
+**Enhance** reescreve o seu rascunho no próprio lugar, sem enviar, de um jeito que a IA entenda de primeira:
 
-- a tarefa reescrita com clareza, na língua do rascunho;
-- as skills instaladas que combinam com a tarefa (`/nome`);
-- detalhes relevantes do projeto atual;
-- as decisões que o Claude deve perguntar antes de começar;
-- o que define o trabalho pronto.
+- corrige a escrita e tira repetições e hesitações;
+- põe o objetivo primeiro e lista em tópicos os pedidos e restrições que você já fez;
+- quando o pedido tem um resultado verificável, fecha com um **Pronto quando** curto, só com o que você já pediu;
+- sai na língua do rascunho.
 
-Você revisa, ajusta e envia.
+Não acrescenta nada seu: nada de requisitos novos, perguntas, sugestões ou fatos do projeto. Você revisa, ajusta e envia.
 
 ## Uso
 
@@ -44,15 +43,9 @@ Para usar outra tecla, troque `alt+e`. A dica na faixa lê esse arquivo e mostra
 
 ## O que vai para o modelo
 
-A cada Enhance, o mod monta e envia, pelo mesmo cliente e conta da sua sessão:
+A cada Enhance, o mod envia só o rascunho e as instruções de reescrita, pelo mesmo cliente e conta da sua sessão. Nada do projeto, da conversa ou da lista de skills vai junto: o Claude que recebe o prompt já tem tudo isso, e a reescrita não precisa.
 
-- **Skills:** a lista de comandos e skills que você pode rodar (`$.command.list()`), sem o próprio `/enhance`.
-- **Projeto:** git (remote sem credenciais, status, últimos commits), a estrutura de pastas até dois níveis, os manifestos (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod` e outros) e trechos de `CLAUDE.md`, `.claude/CLAUDE.md`, `AGENTS.md`, `README.md` e `tasks.md`.
-- **Conversa:** as últimas 6 mensagens da sessão, resumidas.
-
-A lista de skills vai primeiro, marcada para o cache de prompt da API.
-
-A reescrita sai na língua do rascunho, mesmo que o seu `language` do Claude Code seja outro, porque o texto é o seu prompt e não uma resposta para você. O mod reconhece inglês e português sozinho e entrega ao modelo os rótulos certos; em outras línguas, quem decide é o próprio modelo.
+A reescrita sai na língua do rascunho, mesmo que o seu `language` do Claude Code seja outro, porque o texto é o seu prompt e não uma resposta para você. O mod reconhece inglês e português sozinho e entrega ao modelo o rótulo certo do "Pronto quando"; em outras línguas, quem decide é o próprio modelo.
 
 ## Configuração
 

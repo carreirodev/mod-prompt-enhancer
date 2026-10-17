@@ -96,7 +96,7 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
           ✓
         </Text>
         <Text> Prompt melhorado</Text>
-        {isRoomy && <Text dimColor>{` · ${note} · ${seconds(finishedAt - startedAt)} s`}</Text>}
+        {isRoomy && <Text dimColor>{` · ${seconds(finishedAt - startedAt)} s`}</Text>}
       </Text>
     ) : phase === 'failed' ? (
       <Text wrap="truncate-end">

@@ -1,6 +1,6 @@
 import type { EnhanceEffort, EnhanceModel, EnhanceSettings } from '../types'
 
-import { isRecord } from './context'
+import { isRecord } from './text'
 
 export type SettingsChange = { settings: EnhanceSettings } | { unknown: string[] }
 

@@ -1,7 +1,7 @@
 {
   "name": "prompt-enhancer",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "author": { "name": "carreirodev" },
-  "description": "Botões Enhance e Send acima do prompt: reescreve o rascunho no lugar com as skills certas, contexto do projeto, perguntas a decidir e o que é \"pronto\".",
+  "description": "Botões Enhance e Send acima do prompt: reescreve o rascunho no lugar, mais claro para a IA, sem acrescentar nada.",
   "types": "./types/index.d.ts"
 }

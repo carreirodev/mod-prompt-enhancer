@@ -57,3 +57,15 @@ Done when: a fresh terminal session draws "alt+e melhora o rascunho" from the ba
 - [x] Test: the first draw, with no `session.start`, names the chord on the terminal and /enhance on desktop
 - [x] Real terminal: `claude --debug --plugin-dir <repo>` drew alt+e on its first frame, before `session.start` settled
 - [x] Commit, push, `claude plugin update` (7160e58)
+
+## 0.3.0 — Enhance only rewrites
+
+Done when: Enhance returns the draft rewritten (same request, clearer words, goal first, the author's own points as bullets) plus, only for checkable work, a short "Pronto quando" that restates what the draft asks; no questions, no skills, no project facts; the request carries only the draft; validate, tsc and tests pass; a real rewrite of a messy draft shows it.
+
+- [x] New SYSTEM and language directive (one label), request with the draft only
+- [x] Drop the context gathering and the skills/questions summary; `context.ts` → `text.ts` for the helpers left
+- [x] Band's done state without the summary; command and plugin descriptions; README; bump to 0.3.0
+- [x] Tests, validate, tsc
+- [x] Real rewrites: the same request through `claude -p` (sonnet, medium) on four drafts, twice (messy Portuguese, English, a question, a vague one); then E2E in WSL tmux with `--plugin-dir`, Enhance pressed by `ctrl+x tab` Enter on the messy draft
+- [x] Commit, local only (the person's choice)
+- [ ] Push and `claude plugin update`, when the person asks

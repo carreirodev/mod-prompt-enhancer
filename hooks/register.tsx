@@ -3,10 +3,10 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { EnhanceRun, EnhanceSettings } from '../types'
 import { drawBand } from './band'
-import { clip, errorText, listSkills, oneLine, snapshotProject } from './context'
 import { readHotkey } from './hotkey'
-import { buildRequest, cleanReply, describeSummary, failureText, summarize } from './rewrite'
+import { buildRequest, cleanReply, failureText } from './rewrite'
 import { applyArgs, DEFAULT_SETTINGS, describeSettings, EFFORTS, MODELS, parseSettings } from './settings'
+import { clip, errorText, oneLine } from './text'
 
 const COMMAND = 'enhance'
 const STORE_KEY = 'settings'
@@ -125,7 +125,7 @@ async function enhance($: EngineInterface, args: string): Promise<void> {
   await update($, run, () => ({
     phase: 'working',
     original: draft,
-    note: 'lendo o projeto',
+    note: 'reescrevendo',
     startedAt,
     finishedAt: 0,
   }))
@@ -136,17 +136,13 @@ async function enhance($: EngineInterface, args: string): Promise<void> {
   })
 
   try {
-    const [skills, snapshot, chosen] = await Promise.all([
-      listSkills($, COMMAND),
-      snapshotProject($),
-      loadSettings($),
-    ])
+    const chosen = await loadSettings($)
     if (controller.signal.aborted) {
       return
     }
 
     await update($, run, current => ({ ...current, note: `reescrevendo com ${chosen.model}` }))
-    const request = buildRequest({ draft, skills, snapshot, ...chosen })
+    const request = buildRequest({ draft, ...chosen })
     const reply = await $.model.complete(request, { signal: controller.signal })
     if (controller.signal.aborted) {
       return
@@ -183,7 +179,7 @@ async function enhance($: EngineInterface, args: string): Promise<void> {
       return
     }
 
-    await finish($, 'done', describeSummary(summarize(rewritten, skills)))
+    await finish($, 'done', '')
   } catch (error) {
     if (controller.signal.aborted) {
       return
@@ -283,7 +279,7 @@ export const register: Register = on => {
     // why: the engine recognises a hook that answers its own command only when both name it as a literal.
     await $.command.register({
       name: 'enhance',
-      description: 'Reescreve o rascunho da caixa de prompt com skills, contexto, perguntas e critério de pronto',
+      description: 'Reescreve o rascunho da caixa de prompt com mais clareza, sem acrescentar nada',
       argumentHint: '[rascunho]',
       immediate: true,
     })
