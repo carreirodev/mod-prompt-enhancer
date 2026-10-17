@@ -13,7 +13,7 @@ Done when: the band above the prompt shows Enhance and Send; alt+e and the Enhan
 - [x] Fixes from E2E: focus never lands on Send mid-rewrite; Send keeps the draft on failure; rewrite follows the draft's language
 - [x] `.gitignore` for the generated `.claude-plugin/types/`; README installs from GitHub instead of a local path
 - [x] First commit, pushed to GitHub (public)
-- [ ] Install for every session (`claude plugin marketplace add` + `claude plugin install`), then rerun tsc against the generated types
+- [x] Install for every session (`claude plugin marketplace add` + `claude plugin install`), then rerun tsc against the generated types
 
 ## Found (out of scope, waiting for a Linear project)
 
