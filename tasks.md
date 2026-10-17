@@ -56,4 +56,4 @@ Done when: a fresh terminal session draws "alt+e melhora o rascunho" from the ba
 - [x] Chord read once per load in `chordOf` (`hooks/register.tsx`), awaited by every draw; `hotkey` dropped from the state contract
 - [x] Test: the first draw, with no `session.start`, names the chord on the terminal and /enhance on desktop
 - [x] Real terminal: `claude --debug --plugin-dir <repo>` drew alt+e on its first frame, before `session.start` settled
-- [ ] Commit, push, `claude plugin update`
+- [x] Commit, push, `claude plugin update` (7160e58)
