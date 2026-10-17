@@ -1,0 +1,6 @@
+{
+  "name": "prompt-enhancer",
+  "owner": { "name": "carreirodev" },
+  "description": "Prompt Enhancer: botões Enhance e Send acima da caixa de prompt do Claude Code",
+  "plugins": [{ "name": "prompt-enhancer", "source": "./" }]
+}
