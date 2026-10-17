@@ -38,5 +38,5 @@ Done when: on the desktop surface Enhance (primary), Send, Desfazer and Cancelar
 
 - [x] Desktop branch in `hooks/band.tsx` (no `plain`, `variant`, `gap="sm"`, `marginBottom="md"`), terminal untouched
 - [x] Test for both surfaces, validate, tsc, tests
-- [ ] Commit, push (asks first), `claude plugin update`, `/reload-plugins`
+- [x] Commit, push (asks first), `claude plugin update` (bbf8200)
 - [ ] Look at it in the desktop app
