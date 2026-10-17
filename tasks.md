@@ -68,4 +68,4 @@ Done when: Enhance returns the draft rewritten (same request, clearer words, goa
 - [x] Tests, validate, tsc
 - [x] Real rewrites: the same request through `claude -p` (sonnet, medium) on four drafts, twice (messy Portuguese, English, a question, a vague one); then E2E in WSL tmux with `--plugin-dir`, Enhance pressed by `ctrl+x tab` Enter on the messy draft
 - [x] Commit, local only (the person's choice)
-- [ ] Push and `claude plugin update`, when the person asks
+- [x] Push and `claude plugin update` (db5ebd4, installed 0.2.3 → 0.3.0)
