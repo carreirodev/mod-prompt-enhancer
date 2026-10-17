@@ -47,4 +47,4 @@ Done when: on desktop the band's hint reads "/enhance melhora o rascunho" (the a
 
 - [x] `isNative` picks `/enhance` for the hint in `hooks/band.tsx`; README notes it
 - [x] Test for both surfaces (hotkey loaded through `session.start`), validate, tsc, tests
-- [ ] Commit, push, `claude plugin update`
+- [x] Commit, push, `claude plugin update` (8095195)
