@@ -16,7 +16,7 @@ Você revisa, ajusta e envia.
 
 | Ação | Como |
 | --- | --- |
-| Melhorar o rascunho | `alt+e` na caixa de prompt, ou o chip **✦ Enhance** |
+| Melhorar o rascunho | `alt+e` na caixa de prompt, ou o chip **✦ Enhance**; no app desktop, o botão **Enhance** ou `/enhance` antes do rascunho (lá o `alt+e` não funciona) |
 | Enviar | **➤ Send** (ou Enter, como sempre) |
 | Voltar ao rascunho original | **↶ Desfazer**, que aparece depois de melhorar |
 | Parar uma reescrita | **Cancelar**, que aparece enquanto ela roda |

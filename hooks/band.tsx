@@ -76,9 +76,10 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
       </Button>
     )
 
+  // why: the desktop app has its own fixed shortcuts and never reads keybindings.json, so there the chord does nothing.
   const hint = (
     <Text wrap="truncate-end">
-      <Text color="claude">{view.hotkey === '' ? '/enhance' : view.hotkey}</Text>
+      <Text color="claude">{isNative || view.hotkey === '' ? '/enhance' : view.hotkey}</Text>
       <Text dimColor> melhora o rascunho</Text>
     </Text>
   )

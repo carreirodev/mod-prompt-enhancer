@@ -40,3 +40,11 @@ Done when: on the desktop surface Enhance (primary), Send, Desfazer and Cancelar
 - [x] Test for both surfaces, validate, tsc, tests
 - [x] Commit, push (asks first), `claude plugin update` (bbf8200)
 - [x] Look at it in the desktop app (approved by the person, 2026-10-17)
+
+## 0.2.2 — desktop hint names /enhance
+
+Done when: on desktop the band's hint reads "/enhance melhora o rascunho" (the app ignores keybindings.json, so alt+e does nothing there); the terminal still shows the chord; tests, validate and tsc pass.
+
+- [x] `isNative` picks `/enhance` for the hint in `hooks/band.tsx`; README notes it
+- [x] Test for both surfaces (hotkey loaded through `session.start`), validate, tsc, tests
+- [ ] Commit, push, `claude plugin update`

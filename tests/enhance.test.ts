@@ -168,6 +168,28 @@ describe('band', () => {
     await terminal.unmount()
   })
 
+  test('the hint names the chord on the terminal and /enhance on desktop', async ($, on) => {
+    mock.clock(on, { now: 1_000 })
+    mock.env(on, { USERPROFILE: '/home/me' })
+    on('session.start', ($, e) => ({ cwd: e.cwd }))
+    on('command.register', () => ({ value: { command: 'enhance' } }))
+    on('fs.exists', () => ({ value: true }))
+    on('fs.read', () => ({
+      value: JSON.stringify({ bindings: [{ context: 'Chat', bindings: { 'alt+e': 'command:enhance' } }] }),
+    }))
+    await $.session.start({ cwd: '/work/app', surface: 'terminal', isInteractive: true })
+
+    const terminal = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    expect(await terminal.find({ text: 'alt+e' })).toBeDefined()
+    expect(await terminal.find({ text: '/enhance' })).toBeUndefined()
+    await terminal.unmount()
+
+    const desktop = await $.ui.mount({ ...BAND, surface: 'desktop' })
+    expect(await desktop.find({ text: '/enhance' })).toBeDefined()
+    expect(await desktop.find({ text: 'alt+e' })).toBeUndefined()
+    await desktop.unmount()
+  })
+
   test('yields the band to a survey', async ($, on) => {
     world(on, '', ANSWER)
     on('ui.render', { component: 'AbovePrompt' }, () => ({ type: 'Text', props: {}, children: ['survey'] }))
