@@ -88,7 +88,7 @@ Para mexer no mod, adicione o marketplace pela pasta clonada em vez do GitHub (`
 
 - **Send** não leva colagens nem imagens (`[Pasted text #1]`, `[Image #1]`), porque um prompt enviado por mod não as expande. Nesses casos o botão avisa, e você envia com Enter.
 - Um prompt enviado pelo **Send** aparece no transcript marcado como vindo do `prompt-enhancer`, mas o modelo o lê como palavras suas.
-- A faixa existe no terminal e no app desktop; o mobile e o VS Code não desenham essa área.
+- A faixa existe no terminal e no app desktop; o mobile e o VS Code não desenham essa área. No terminal os botões são chips coloridos; no desktop são os botões do próprio app (Enhance em destaque), com um respiro abaixo para o mod que desenhar logo embaixo.
 - Com o mod desinstalado, o `alt+e` responde que `/enhance` não existe. Remova a linha do `keybindings.json` nesse caso.
 
 ## Desenvolvimento

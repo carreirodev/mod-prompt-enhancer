@@ -147,6 +147,27 @@ describe('band', () => {
     }
   })
 
+  test('desktop draws native buttons with room below; the terminal keeps its chips', async ($, on) => {
+    world(on, '', ANSWER)
+    const desktop = await $.ui.mount({ ...BAND, surface: 'desktop' })
+    const nativeEnhance = await desktop.find({ type: 'Button', key: 'enhance' })
+    const nativeSend = await desktop.find({ type: 'Button', key: 'send' })
+    expect(nativeEnhance?.props.plain).toBeUndefined()
+    expect(nativeEnhance?.props.variant).toBe('primary')
+    expect(nativeEnhance?.props.autoFocus).toBe(true)
+    expect(nativeSend?.props.plain).toBeUndefined()
+    expect(nativeSend?.props.variant).toBe('secondary')
+    expect((await desktop.find({ type: 'Box' }))?.props.marginBottom).toBe('md')
+    await desktop.unmount()
+
+    const terminal = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    expect((await terminal.find({ type: 'Button', key: 'enhance' }))?.props.plain).toBe(true)
+    expect((await terminal.find({ type: 'Button', key: 'send' }))?.props.plain).toBe(true)
+    expect(await terminal.find({ text: /Enhance/ })).toBeDefined()
+    expect((await terminal.find({ type: 'Box' }))?.props.marginBottom).toBe(0)
+    await terminal.unmount()
+  })
+
   test('yields the band to a survey', async ($, on) => {
     world(on, '', ANSWER)
     on('ui.render', { component: 'AbovePrompt' }, () => ({ type: 'Text', props: {}, children: ['survey'] }))

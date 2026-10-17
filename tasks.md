@@ -31,3 +31,12 @@ Done when: `/prompt-enhancer` opens a row in the band with Model and Effort pick
 
 - ~~`.tlc/harness/state/*` showed up as untracked in this repo~~ — gone by 2026-10-17 (no `.tlc/` folder), nothing to decide.
 - The done state ("✓ Prompt melhorado" + Desfazer) outlives a box cleared with ctrl+c and slash commands run afterwards; only a submitted prompt resets it (`hooks/register.tsx`, the `prompt.submit` hook). Seen in the 0.2.0 E2E, predates it. Pressing Desfazer then still puts the original draft back, so it is cosmetic.
+
+## 0.2.1 — native buttons on desktop
+
+Done when: on the desktop surface Enhance (primary), Send, Desfazer and Cancelar are the app's own buttons, the band keeps a step of space below it for the mod drawn underneath (status-pills), the terminal tree is unchanged; validate, tsc and tests pass; the person sees it in the desktop app.
+
+- [x] Desktop branch in `hooks/band.tsx` (no `plain`, `variant`, `gap="sm"`, `marginBottom="md"`), terminal untouched
+- [x] Test for both surfaces, validate, tsc, tests
+- [ ] Commit, push (asks first), `claude plugin update`, `/reload-plugins`
+- [ ] Look at it in the desktop app

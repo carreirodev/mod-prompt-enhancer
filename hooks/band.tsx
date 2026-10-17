@@ -38,6 +38,8 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
   const Select = 'Select' in elements ? elements.Select : undefined
   const width = Math.max(24, e.props.bodyColumns)
   const isRoomy = width >= ROOMY_COLUMNS
+  // why: a desktop draws a plain Button as bare text and drops the chip's colors, so there each control is its native button.
+  const isNative = e.surface !== 'terminal'
   const { phase, note, startedAt, finishedAt } = view.run
 
   const shimmer = (text: string) => {
@@ -52,7 +54,9 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
   const glyph = phase === 'working' ? (SPINNER[Math.floor(view.frame / 2) % SPINNER.length] ?? '✦') : '✦'
 
   // invariant: Enhance stays a Button in every phase, so the focus ring never slides onto Send mid-rewrite.
-  const enhance = (
+  const enhance = isNative ? (
+    <Button key="enhance" label="Enhance" variant="primary" autoFocus onPress={act.enhance} />
+  ) : (
     <Button key="enhance" label="Enhance" plain variant="primary" autoFocus onPress={act.enhance}>
       <Text backgroundColor="claude" color={INK} bold>
         {` ${glyph} Enhance `}
@@ -62,13 +66,15 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
 
   // why: a plugin's submit always lands in the main conversation, so Send would miss an agent in view.
   const send =
-    e.props.view.agentId === undefined ? (
+    e.props.view.agentId !== undefined ? null : isNative ? (
+      <Button key="send" label="Send" variant="secondary" onPress={act.send} />
+    ) : (
       <Button key="send" label="Send" plain onPress={act.send}>
         <Text backgroundColor={SEND_BACKGROUND} color={PAPER} bold>
           {' ➤ Send '}
         </Text>
       </Button>
-    ) : null
+    )
 
   const hint = (
     <Text wrap="truncate-end">
@@ -103,18 +109,33 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
 
   const trailing =
     phase === 'working' ? (
-      <Button key="cancel" label="Cancelar" plain dimColor onPress={act.cancel} />
+      isNative ? (
+        <Button key="cancel" label="Cancelar" variant="secondary" onPress={act.cancel} />
+      ) : (
+        <Button key="cancel" label="Cancelar" plain dimColor onPress={act.cancel} />
+      )
     ) : phase === 'done' ? (
-      <Button key="undo" label="Desfazer" plain onPress={act.undo}>
-        <Text color="claude">↶</Text> Desfazer
-      </Button>
+      isNative ? (
+        <Button key="undo" label="Desfazer" variant="secondary" onPress={act.undo} />
+      ) : (
+        <Button key="undo" label="Desfazer" plain onPress={act.undo}>
+          <Text color="claude">↶</Text> Desfazer
+        </Button>
+      )
     ) : isRoomy && phase === 'idle' ? (
       hint
     ) : null
 
+  // why: another mod may draw right under this band (status-pills puts its pills there), so on desktop it keeps a step of air below.
   const actions = (
-    <Box flexDirection="row" width={width} justifyContent="space-between">
-      <Box flexDirection="row" flexShrink={1} gap={1}>
+    <Box
+      flexDirection="row"
+      width={width}
+      justifyContent="space-between"
+      alignItems={isNative ? 'center' : 'stretch'}
+      marginBottom={isNative ? 'md' : 0}
+    >
+      <Box flexDirection="row" flexShrink={1} gap={isNative ? 'sm' : 1} alignItems={isNative ? 'center' : 'stretch'}>
         {enhance}
         {send}
         {status !== null && (
