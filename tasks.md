@@ -25,7 +25,7 @@ Done when: `/prompt-enhancer` opens a row in the band with Model and Effort pick
 - [x] Drop `userConfig` from plugin.json, bump to 0.2.0, README
 - [x] Tests, validate, tsc
 - [x] E2E in WSL tmux: row opens, ctrl+x tab opens the Model list, Tab moves to Effort then Fechar, picks land in the store, Enhance ran with haiku, typed form saves and refuses `gpt`, choice holds in a new session, row fits 60 columns
-- [ ] Commit, push (asks first), `claude plugin update`
+- [x] Commit, push (asks first), `claude plugin update`
 
 ## Found (out of scope, waiting for a Linear project)
 
