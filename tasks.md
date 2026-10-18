@@ -69,3 +69,13 @@ Done when: Enhance returns the draft rewritten (same request, clearer words, goa
 - [x] Real rewrites: the same request through `claude -p` (sonnet, medium) on four drafts, twice (messy Portuguese, English, a question, a vague one); then E2E in WSL tmux with `--plugin-dir`, Enhance pressed by `ctrl+x tab` Enter on the messy draft
 - [x] Commit, local only (the person's choice)
 - [x] Push and `claude plugin update` (db5ebd4, installed 0.2.3 → 0.3.0)
+
+## 0.3.1 — the band keeps what other mods draw
+
+Done when: with this mod installed, the mods drawn beneath it in the band (plan-progress bars, image-view thumbnails) show above Enhance; 0.3.0 answered the band without `next`, so every one of them was dropped; alone, the band draws as before; tests, validate and tsc pass; a real session shows a bar above Enhance.
+
+- [x] The `AbovePrompt` hook asks `next` last and draws its tree above the Enhance row (`hooks/register.tsx`); the row is keyed `actions`
+- [x] Tests: a band beneath this one shows above Enhance on terminal and desktop; the survey test proves the survey draws; `world` stands in for the engine's empty band
+- [x] Validate, tsc, tests (32 pass)
+- [x] Real terminal: `claude --plugin-dir <repo>` in WSL tmux drew a plan-progress bar above Enhance
+- [ ] Push and `claude plugin update`

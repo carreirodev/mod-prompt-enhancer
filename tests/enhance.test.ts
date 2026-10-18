@@ -53,6 +53,9 @@ const BAND = {
   },
 } as const
 
+// why: nothing sits beneath the plugins in a test, so this stands for the engine's band with no survey and no other mod.
+const engineBand = (on: On) => on('ui.render', { component: 'AbovePrompt' }, () => ({ type: 'Box', props: {}, children: [] }))
+
 type World = {
   box: PromptBox
   fills: PromptFillInput[]
@@ -113,6 +116,7 @@ const world = (
     return { value: undefined }
   })
   on('ui.log', () => ({ value: undefined }))
+  engineBand(on)
 
   return seen
 }
@@ -138,14 +142,14 @@ describe('band', () => {
     expect(nativeEnhance?.props.autoFocus).toBe(true)
     expect(nativeSend?.props.plain).toBeUndefined()
     expect(nativeSend?.props.variant).toBe('secondary')
-    expect((await desktop.find({ type: 'Box' }))?.props.marginBottom).toBe('md')
+    expect((await desktop.find({ type: 'Box', key: 'actions' }))?.props.marginBottom).toBe('md')
     await desktop.unmount()
 
     const terminal = await $.ui.mount({ ...BAND, surface: 'terminal' })
     expect((await terminal.find({ type: 'Button', key: 'enhance' }))?.props.plain).toBe(true)
     expect((await terminal.find({ type: 'Button', key: 'send' }))?.props.plain).toBe(true)
     expect(await terminal.find({ text: /Enhance/ })).toBeDefined()
-    expect((await terminal.find({ type: 'Box' }))?.props.marginBottom).toBe(0)
+    expect((await terminal.find({ type: 'Box', key: 'actions' }))?.props.marginBottom).toBe(0)
     await terminal.unmount()
   })
 
@@ -156,6 +160,7 @@ describe('band', () => {
     on('fs.read', () => ({
       value: JSON.stringify({ bindings: [{ context: 'Chat', bindings: { 'alt+e': 'command:enhance' } }] }),
     }))
+    engineBand(on)
 
     // invariant: no session.start first, as when the band draws before the engine's start hooks have settled.
     const terminal = await $.ui.mount({ ...BAND, surface: 'terminal' })
@@ -170,11 +175,26 @@ describe('band', () => {
   })
 
   test('yields the band to a survey', async ($, on) => {
-    world(on, '', ANSWER)
     on('ui.render', { component: 'AbovePrompt' }, () => ({ type: 'Text', props: {}, children: ['survey'] }))
+    world(on, '', ANSWER)
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal', props: { ...BAND.props, hasSurvey: true } })
     expect(await ui.find({ type: 'Button', key: 'enhance' })).toBeUndefined()
+    expect(await ui.find({ text: 'survey' })).toBeDefined()
     await ui.unmount()
+  })
+
+  test('keeps what the mods beneath it draw, above Enhance, on terminal and desktop', async ($, on) => {
+    // invariant: registered before world, so it answers above the engine's empty band.
+    on('ui.render', { component: 'AbovePrompt' }, () => ({ type: 'Text', props: {}, children: ['bars'] }))
+    world(on, '', ANSWER)
+    for (const surface of ['terminal', 'desktop'] as const) {
+      const ui = await $.ui.mount({ ...BAND, surface })
+      const column = await ui.find({ type: 'Box' })
+      expect(column?.props.flexDirection).toBe('column')
+      expect(column?.children[0]).toMatchObject({ type: 'Text', children: ['bars'] })
+      expect(await ui.find({ type: 'Button', key: 'enhance' })).toBeDefined()
+      await ui.unmount()
+    }
   })
 })
 

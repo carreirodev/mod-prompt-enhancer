@@ -130,6 +130,7 @@ export function drawBand($: EngineInterface, e: RenderInput<'AbovePrompt'>, view
   // why: another mod may draw right under this band (status-pills puts its pills there), so on desktop it keeps a step of air below.
   const actions = (
     <Box
+      key="actions"
       flexDirection="row"
       width={width}
       justifyContent="space-between"

@@ -332,7 +332,7 @@ export const register: Register = on => {
       $.clock.now(),
     ])
 
-    return drawBand(
+    const band = drawBand(
       $,
       e,
       { run: current, frame: tick, hotkey: chord, settings: configuring ? chosen : undefined, now },
@@ -345,6 +345,19 @@ export const register: Register = on => {
         pickEffort: value => detach($, 'Esforço', choose($, 'effort', value)),
         closeSettings: () => detach($, 'Fechar', closeSettings($)),
       },
+    )
+
+    // why: the band is shared, and the mods beneath this one (plan-progress bars, image-view thumbnails) draw only
+    // through next; asked last, so a slow hook below cannot set the band with an older draw after a newer one.
+    const below = await next(e)
+    const { Box } = $.ui.resolve(e)
+
+    // invariant: Enhance stays the row next to the prompt it rewrites.
+    return (
+      <Box flexDirection="column">
+        {below}
+        {band}
+      </Box>
     )
   })
 }
