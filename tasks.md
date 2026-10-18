@@ -78,4 +78,4 @@ Done when: with this mod installed, the mods drawn beneath it in the band (plan-
 - [x] Tests: a band beneath this one shows above Enhance on terminal and desktop; the survey test proves the survey draws; `world` stands in for the engine's empty band
 - [x] Validate, tsc, tests (32 pass)
 - [x] Real terminal: `claude --plugin-dir <repo>` in WSL tmux drew a plan-progress bar above Enhance
-- [ ] Push and `claude plugin update`
+- [x] Push and `claude plugin update` (6eb092c, installed 0.3.0 → 0.3.1)
