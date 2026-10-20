@@ -65,7 +65,19 @@ A escolha fica guardada num arquivo do próprio mod, na pasta de configuração 
 
 ## Instalar em todas as sessões
 
-Ele se instala a partir do [WPC Mods for Claude](https://github.com/carreirodev/wpc-mods-claude/blob/main/README.pt-BR.md), o marketplace com todos os meus mods. No terminal, uma vez:
+Ele se instala a partir do [WPC Mods for Claude](https://github.com/carreirodev/wpc-mods-claude/blob/main/README.pt-BR.md), o marketplace com todos os meus mods, uma vez por computador. Há dois jeitos, e os dois fazem a mesma coisa: escolha um.
+
+**Dentro do Claude Code**, numa sessão:
+
+```
+/plugin marketplace add carreirodev/wpc-mods-claude
+```
+
+```
+/plugin install prompt-enhancer@wpc-mods-claude
+```
+
+**Pelo terminal**, fora do Claude Code:
 
 ```
 claude plugin marketplace add carreirodev/wpc-mods-claude
@@ -74,6 +86,8 @@ claude plugin marketplace add carreirodev/wpc-mods-claude
 ```
 claude plugin install prompt-enhancer@wpc-mods-claude
 ```
+
+De um jeito ou do outro, depois abra uma sessão nova, ou rode `/reload-plugins` numa sessão já aberta.
 
 Para receber uma versão nova, rode `claude plugin update prompt-enhancer@wpc-mods-claude` e depois `/reload-plugins` numa sessão aberta.
 
