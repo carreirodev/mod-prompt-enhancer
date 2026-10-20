@@ -67,19 +67,21 @@ The choice is saved in the mod's own file, in the Claude Code configuration fold
 
 ## Install for every session
 
-This repository is also a marketplace. In the terminal, once:
+It installs from [WPC Mods for Claude](https://github.com/carreirodev/wpc-mods-claude), the marketplace with all my mods. In the terminal, once:
 
 ```
-claude plugin marketplace add carreirodev/mod-prompt-enhancer
+claude plugin marketplace add carreirodev/wpc-mods-claude
 ```
 
 ```
-claude plugin install prompt-enhancer@prompt-enhancer
+claude plugin install prompt-enhancer@wpc-mods-claude
 ```
 
-To get a new version, run `claude plugin update prompt-enhancer@prompt-enhancer` and then `/reload-plugins` in an open session.
+To get a new version, run `claude plugin update prompt-enhancer@wpc-mods-claude` and then `/reload-plugins` in an open session.
 
-To work on the mod, add the marketplace from your cloned folder instead of GitHub (`claude plugin marketplace add C:\path\to\clone`). Claude Code then reads the mod straight from that folder, and after an edit you just run `/reload-plugins` in an open session.
+Installed it earlier from this repository's own marketplace (`prompt-enhancer@prompt-enhancer`)? That copy keeps updating as before. To switch, follow [these steps](https://github.com/carreirodev/wpc-mods-claude#if-you-already-installed-a-mod-from-its-own-repository); don't keep both, since only one would run.
+
+To work on the mod, uninstall the copy above and add this repository's own marketplace from your cloned folder (`claude plugin marketplace add C:\path\to\clone`). Claude Code then reads the mod straight from that folder, and after an edit you just run `/reload-plugins` in an open session.
 
 ## Known limitations
 
